@@ -92,6 +92,25 @@ svg[viewBox="0 0 1011 208"] {
   background-image: url("/autopublic/autopublic-lockup-dark.png");
 }
 
+/* ---- menu lateral maior ----------------------------------------------
+   O app usa o modo compacto (só texto de 10px) em telas com até 800px de altura.
+   Aqui o ícone volta a aparecer em cima do texto, e o texto e o logo ficam maiores. */
+@media (max-height: 800px) {
+  a.custom\:h-\[30px\] {
+    height: 49px !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    gap: 2px !important;
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+  }
+  a.custom\:h-\[30px\] > div.custom\:hidden { display: block !important; line-height: 0; }
+  a.custom\:h-\[30px\] > div.custom\:hidden svg { width: 21px; height: 21px; }
+}
+a.minCustom\:h-\[54px\] > div.text-\[10px\] { font-size: 12px !important; }
+div.mt-\[8px\].w-\[86px\].h-\[60px\] { height: 66px; }
+svg[viewBox="0 0 524 431"] { width: 54px !important; height: 54px !important; }
+
 /* ---- telas de entrada (login / esqueci a senha) ----------------------- */
 .autopublic-auth {
   background: var(--ap-paper);

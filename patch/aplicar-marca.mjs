@@ -18,6 +18,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 
 const arg = (n) => {
   const i = process.argv.indexOf('--' + n);
@@ -308,7 +309,9 @@ if (css.length !== 1) {
   if (jaFeito) {
     console.log(`CSS ${velho} já tem a marca; nada a fazer.`);
   } else {
-    const novo = velho.replace(/\.css$/, '-ap1.css');
+    // o nome muda junto com o conteúdo do tema: o navegador guarda CSS por muito tempo e, com nome fixo, mostraria o antigo
+    const selo = crypto.createHash('sha1').update(cssTema).digest('hex').slice(0, 6);
+    const novo = velho.replace(/\.css$/, `-ap${selo}.css`);
     const conteudo = fs.readFileSync(path.join(chunksDir, velho), 'utf8') + '\n' + cssTema;
     if (!DRY) {
       fs.writeFileSync(path.join(chunksDir, novo), conteudo);

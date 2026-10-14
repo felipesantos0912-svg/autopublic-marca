@@ -15,7 +15,7 @@ Ela não recompila o app. Aplica substituições nos arquivos **já compilados**
 
 1. **Nome**: "Robô MultiPost", "Multipost", "Postiz" e "Gitroom" viram "Autopublic" (títulos de aba, textos, e-mails do sistema).
 2. **Marketing do curso removido**: depoimentos de usuários do Postiz e "20.000+ empreendedores" no login, textos de cobrança/FAQ/desconto, vídeo de tutorial do Postiz no onboarding, rodapé "Gitroom Limited" dos e-mails.
-3. **Visual**: cores roxo/rosa/vermelho → dourado (`autopublic-theme.css`), logo e favicon novos (`assets/`), painel do login com a marca, logo e ícone trocados, ilustrações recoloridas.
+3. **Visual**: cores roxo/rosa/vermelho → dourado (`autopublic-theme.css`), logo e favicon novos (`assets/`), painel do login com a marca, logo e ícone trocados, ilustrações recoloridas, menu lateral maior (em telas de até 800 px de altura o app mostrava só texto de 10 px; agora mostra ícone + texto de 12 px). O arquivo de CSS da marca muda de nome a cada alteração (hash do conteúdo), pra o navegador não reaproveitar uma versão antiga.
 4. **Links**: Termos e Privacidade apontam para as páginas do Autopublic. Nenhum recurso do app é escondido (Agent, Integrações, Divulgações, login com Google e cadastro continuam disponíveis; cada um depende da sua configuração).
 
 5. **Privacidade**: o recurso "agência" do Postiz enviava um e-mail com dados de quem se cadastrava como agência para o autor do projeto original (`nevo@postiz.com`). Esse aviso agora vai para o administrador do Autopublic (`ADMIN_EMAIL`, argumento de build, padrão `felipe@agenciadeliveryfood.com.br`). O cabeçalho `User-Agent` das chamadas a serviços externos também foi trocado.

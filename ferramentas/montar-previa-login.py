@@ -32,7 +32,10 @@ h = h.replace("justify-center gap-[20px] h-full flex flex-col text-white", "just
 # 3) sem scripts (prévia estática), CSS com o nome novo, título
 h = re.sub(r"<script\b[^>]*>.*?</script>", "", h, flags=re.S)
 h = re.sub(r'<link rel="preload"[^>]*>', "", h)
-h = h.replace("3nyzzxxkjer-m.css", "3nyzzxxkjer-m-ap1.css")
+import glob
+patchados = glob.glob(os.path.join(trab, "next", "static", "chunks", "*-ap*.css"))
+assert patchados, "CSS patchado não encontrado em " + trab
+h = h.replace("3nyzzxxkjer-m.css", os.path.basename(patchados[0]))  # o nome muda com o conteúdo do tema
 h = re.sub(r"<title>.*?</title>", "<title>Autopublic · Entrar</title>", h)
 
 # 4) pasta servida: html + _next/static + autopublic/
