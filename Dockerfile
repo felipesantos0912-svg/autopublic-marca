@@ -11,6 +11,8 @@ FROM ${BASE}
 
 # Link "Código-fonte (AGPL-3.0)" exibido na tela de login (opcional, mas recomendado).
 ARG FONTE_URL=""
+# Quem recebe avisos internos do sistema (no original, o recurso "agência" avisava o autor do Postiz).
+ARG ADMIN_EMAIL="felipe@agenciadeliveryfood.com.br"
 
 COPY patch /tmp/autopublic-marca/patch
 COPY assets /tmp/autopublic-marca/assets
@@ -23,6 +25,7 @@ RUN node /tmp/autopublic-marca/patch/aplicar-marca.mjs \
       --public /app/apps/frontend/public \
       --marca /tmp/autopublic-marca \
       ${FONTE_URL:+--fonte-url "$FONTE_URL"} \
+      ${ADMIN_EMAIL:+--admin-email "$ADMIN_EMAIL"} \
  && rm -rf /tmp/autopublic-marca
 
 LABEL org.opencontainers.image.title="Autopublic" \

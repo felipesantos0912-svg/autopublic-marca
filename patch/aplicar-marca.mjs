@@ -29,6 +29,7 @@ const DISTS = argTodos('dist'); // pode repetir: backend e orquestrador
 const PUBLIC = arg('public');
 const MARCA = arg('marca');
 const FONTE_URL = arg('fonte-url') || '';
+const ADMIN_EMAIL = arg('admin-email') || ''; // quem recebe avisos internos do sistema (no original iam para o autor do Postiz)
 const DRY = process.argv.includes('--dry');
 
 if (!NEXT || !MARCA) {
@@ -112,6 +113,15 @@ function marcaNome(t) {
   t = rep(t, /"gitroom":"Gitroom"/g, '"gitroom":"Autopublic"', 'nome-gitroom');
   // rodapé dos e-mails do sistema
   t = rep(t, /&copy; 2024 Your Gitroom Limited All rights reserved\./g, '&copy; DF Agência Digital LTDA. Todos os direitos reservados.', 'email-rodape');
+  // identificação do programa em chamadas a serviços externos
+  t = rep(t, /RoboMultipost\/1\.0/g, 'Autopublic/1.0', 'user-agent');
+  // o recurso "agência" do Postiz avisava o autor do projeto original (nevo@postiz.com) por e-mail:
+  // redireciona o aviso para o administrador do Autopublic (ou, sem e-mail informado, avisa no resumo)
+  if (ADMIN_EMAIL) {
+    t = rep(t, /sendEmail\('nevo@postiz\.com'/g, `sendEmail(${JSON.stringify(ADMIN_EMAIL).replace(/"/g, "'")}`, 'email-agencia-interno');
+  } else if (t.includes("sendEmail('nevo@postiz.com'")) {
+    bump('ATENCAO-email-para-postiz-sem---admin-email');
+  }
   return t;
 }
 

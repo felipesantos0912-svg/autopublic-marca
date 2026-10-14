@@ -8,6 +8,7 @@
 
 **Natureza da modificação:** troca de nome e marca (nome, logo, favicon, cores, imagens), remoção de textos promocionais do projeto original
 (depoimentos, números de usuários, cobrança, vídeo de tutorial), troca dos links de Termos e Privacidade e painel de login próprio.
+Também foi redirecionado o e-mail de aviso do recurso "agência", que no original ia para o autor do Postiz, e trocado o `User-Agent` das chamadas externas.
 Nenhuma regra de negócio, banco de dados ou API foi alterada.
 
 **Como foi feita:** `patch/aplicar-marca.mjs` aplicado sobre os arquivos compilados da imagem original (ver `README.md`).

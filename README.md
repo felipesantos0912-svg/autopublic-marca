@@ -18,6 +18,8 @@ Ela não recompila o app. Aplica substituições nos arquivos **já compilados**
 3. **Visual**: cores roxo/rosa/vermelho → dourado (`autopublic-theme.css`), logo e favicon novos (`assets/`), painel do login com a marca, logo e ícone trocados, ilustrações recoloridas.
 4. **Links**: Termos e Privacidade apontam para as páginas do Autopublic. Nenhum recurso do app é escondido (Agent, Integrações, Divulgações, login com Google e cadastro continuam disponíveis; cada um depende da sua configuração).
 
+5. **Privacidade**: o recurso "agência" do Postiz enviava um e-mail com dados de quem se cadastrava como agência para o autor do projeto original (`nevo@postiz.com`). Esse aviso agora vai para o administrador do Autopublic (`ADMIN_EMAIL`, argumento de build, padrão `felipe@agenciadeliveryfood.com.br`). O cabeçalho `User-Agent` das chamadas a serviços externos também foi trocado.
+
 Não muda: regras do app, banco de dados, API, integrações com Meta, automações.
 
 ## Créditos e licença
