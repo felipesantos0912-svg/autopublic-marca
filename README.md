@@ -68,8 +68,9 @@ Copia os arquivos compilados do app original para a pasta, aplica o patch, roda 
 (confere que é idempotente), verifica a sintaxe dos arquivos alterados e procura texto antigo que sobrou.
 
 > Os diretórios `original*/` (cópias dos arquivos compilados do app original, usadas só nos testes) não fazem parte
-> deste repositório (`.gitignore`). Para recriá-los, copie `/app/apps/frontend/{public,.next/static,.next/server}`,
-> `/app/apps/backend/dist` e `/app/apps/orchestrator/dist` da imagem original.
+> deste repositório (`.gitignore`). Para recriá-los, rode num servidor com Docker e a imagem original:
+> `bash ferramentas/baixar-originais.sh usuario@servidor . -i ~/.ssh/chave` (usa um container descartável da imagem
+> original fixada por digest; não mexe no app em produção).
 
 ## Cumprimento da AGPL-3.0 (resumo prático — não é parecer jurídico)
 
