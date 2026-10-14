@@ -19,6 +19,7 @@ Ela não recompila o app. Aplica substituições nos arquivos **já compilados**
 4. **Links**: Termos e Privacidade apontam para as páginas do Autopublic. Nenhum recurso do app é escondido (Agent, Integrações, Divulgações, login com Google e cadastro continuam disponíveis; cada um depende da sua configuração).
 
 5. **Privacidade**: o recurso "agência" do Postiz enviava um e-mail com dados de quem se cadastrava como agência para o autor do projeto original (`nevo@postiz.com`). Esse aviso agora vai para o administrador do Autopublic (`ADMIN_EMAIL`, argumento de build, padrão `felipe@agenciadeliveryfood.com.br`). O cabeçalho `User-Agent` das chamadas a serviços externos também foi trocado.
+   O app original também conectava o navegador de cada usuário a terceiros sem necessidade: o script do **Stripe.js** (carregado em toda página, mesmo com cobrança desligada) e a checagem de versão do **CopilotKit** (`api.cloud.copilotkit.ai/check-for-updates`). Ambas foram neutralizadas (se um dia ligar cobrança com Stripe, desfaça essa parte do patch). A telemetria do CopilotKit no servidor se desliga por variável de ambiente (`COPILOTKIT_TELEMETRY_DISABLED=true` e `DO_NOT_TRACK=true`), documentada abaixo.
 
 Não muda: regras do app, banco de dados, API, integrações com Meta, automações.
 
@@ -44,8 +45,16 @@ O nome e o logo "Autopublic" são marca da DF Agência Digital LTDA e não são 
 docker build -t autopublic:marca-1 --build-arg FONTE_URL=<url-do-codigo-fonte> .
 ```
 
-Para usar, troque a `image:` do serviço do app no `docker-compose.override.yml` para `autopublic:marca-1`
+Para usar, troque a `image:` do serviço do app no `docker-compose.override.yml` para a tag gerada (ex.: `autopublic:marca-4`)
 e recrie **só** o app: `docker compose up -d --no-deps postiz`.
+
+Variáveis de ambiente recomendadas no serviço do app (privacidade):
+
+```yaml
+COPILOTKIT_TELEMETRY_DISABLED: "true"   # desliga a telemetria anônima do CopilotKit (Segment/Scarf)
+DO_NOT_TRACK: "true"
+NEXT_TELEMETRY_DISABLED: "1"
+```
 
 **Voltar atrás**: reponha `image: ghcr.io/maiconramos/robo-multipost:0.5.6` e recrie o app.
 

@@ -216,6 +216,24 @@ function marketing(t) {
   return t;
 }
 
+// ------------------------------------------------------------------ 2b) conexões com terceiros desnecessárias
+/**
+ * - Stripe.js: o app o carregava em TODA página (cobrança desligada), expondo o IP dos usuários à Stripe.
+ *   A base do endereço do script passa a ser um data: vazio (nenhuma conexão); se um dia ligarmos cobrança, desfazer.
+ * - CopilotKit: o "dev console" (oculto) consultava api.cloud.copilotkit.ai/check-for-updates uma vez por hora.
+ *   A consulta passa a ler uma resposta local (data:), sem rede.
+ */
+function privacidade(t) {
+  t = rep(t, /"https:\/\/js\.stripe\.com"/g, '"data:text/javascript,void 0;/"', 'stripe-script-neutralizado');
+  t = rep(
+    t,
+    /"https:\/\/api\.cloud\.copilotkit\.ai\/check-for-updates"/g,
+    `'data:application/json,{"packages":[{"latestVersion":"0.0.0"}]}'`,
+    'copilotkit-checagem-neutralizada',
+  );
+  return t;
+}
+
 // ------------------------------------------------------------------ 3) painel do login
 function loginPainel(t) {
   const reCont = /"bg-\[#0E0E0E\] flex flex-1 p-\[12px\] gap-\[12px\] min-h-screen w-screen text-white"/g;
@@ -273,7 +291,7 @@ function processaArquivos(arquivos, fns, rotulo) {
 }
 
 const arquivosNext = [...walk(path.join(NEXT, 'static')), ...walk(path.join(NEXT, 'server'))];
-processaArquivos(arquivosNext, [loginPainel, marketing, marcaNome, cores], 'frontend (.next)');
+processaArquivos(arquivosNext, [loginPainel, marketing, marcaNome, cores, privacidade], 'frontend (.next)');
 for (const d of DISTS) processaArquivos([...walk(d)], [marketing, marcaNome, cores], `backend (${d})`);
 
 // ------------------------------------------------------------------ 5) CSS da marca
