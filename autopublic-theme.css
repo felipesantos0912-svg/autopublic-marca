@@ -1,0 +1,170 @@
+/* ==========================================================================
+   Autopublic — camada de marca (cores, logo, login)
+   Visual da landing: claro, preto/branco/dourado, laranja só em detalhe.
+   Anexado ao CSS compilado do app por patch/aplicar-marca.mjs.
+   ========================================================================== */
+
+:root {
+  --ap-ink: #101114;
+  --ap-gold: #d4af37;
+  --ap-gold-line: #b8941f;
+  --ap-gold-deep: #8a6d1a;
+  --ap-cream: #fbf5e1;
+  --ap-paper: #f6f5f1;
+  --ap-line: #e7e3d6;
+}
+
+/* ---- acento: o vermelho/rosa/roxo do app vira dourado ---------------- */
+:root .light,
+:root .dark {
+  --new-btn-primary: #d4af37;
+  --color-forth: #d4af37;
+}
+:root .dark { --color-custom30: #d4af37; }
+:root .light {
+  --new-textItemFocused: var(--ap-gold-deep);
+  --new-boxFocused: var(--ap-cream);
+  --new-back-drop: #e9dcae;
+  --new-ai-btn: var(--ap-gold-deep);
+  --new-table-text-focused: var(--ap-gold-deep);
+  --color-seventh: #ead9a0;
+  --new-bgColor: var(--ap-paper);
+}
+:root .dark {
+  --new-ai-btn: #d4af37;
+  --new-table-text-focused: #e8c964;
+  --color-seventh: #8a6d1a;
+}
+
+/* hovers/realces roxos fixos do app (#612bd3) */
+.bg-\[\#612bd3\]\/10 { background-color: rgba(212, 175, 55, 0.12); }
+.hover\:border-\[\#612BD3\]\/40:hover,
+.hover\:border-\[\#612bd3\]\/50:hover { border-color: rgba(212, 175, 55, 0.5); }
+.hover\:bg-\[\#612BD3\]\/80:hover { background-color: rgba(212, 175, 55, 0.8); }
+
+/* interruptores (liga/desliga) e barra do item ativo nas Configurações */
+:root .light,
+:root .dark { --color-custom4: #d4af37; }
+div.w-\[4px\].rounded-s-\[3px\] svg stop { stop-color: #d4af37 !important; }
+
+/* cores fixas do app (roxo, rosa, magenta) viram dourado */
+.bg-\[\#612BD3\], .bg-\[\#612bd3\], .bg-\[\#D82D7E\], .bg-\[\#FC69FF\], .\!bg-purple-400 {
+  background-color: var(--ap-gold) !important;
+  color: var(--ap-ink) !important;
+}
+.cursor-pointer.bg-\[\#612BD3\], .cursor-pointer.bg-\[\#D82D7E\], .cursor-pointer.bg-\[\#FC69FF\] {
+  border: 1.5px solid var(--ap-gold-line);
+  font-weight: 700;
+}
+.hover\:bg-\[\#5520CB\]:hover, .hover\:bg-\[\#612BD3\]:hover, .hover\:bg-\[\#5023b8\]:hover,
+.hover\:bg-\[\#7640e0\]:hover, .hover\:bg-\[\#7B3FF2\]:hover { background-color: var(--ap-gold-line) !important; }
+.bg-\[\#AA0FA4\] { background-color: var(--ap-gold-deep) !important; }
+.bg-\[\#AA0FA4\]\/10 { background-color: rgba(212, 175, 55, 0.12) !important; }
+.border-\[\#AA0FA4\]\/30 { border-color: rgba(212, 175, 55, 0.4) !important; }
+.border-\[\#612BD3\], .border-\[\#622FF6\], .focus\:border-\[\#612BD3\]:focus, .border-\[\#FC69FF\],
+.border-purple-400, .border-purple-600 { border-color: var(--ap-gold-line) !important; }
+.border-l-purple-500 { border-left-color: var(--ap-gold) !important; }
+.text-\[\#612BD3\], .text-\[\#612bd3\], .text-\[\#FC69FF\], .text-\[\#B69DEC\] { color: var(--ap-gold-deep) !important; }
+.from-\[\#622aff\], .hover\:from-\[\#7c3aff\]:hover { --tw-gradient-from: #e8c964 !important; }
+.to-\[\#8b5cf6\], .hover\:to-\[\#9d6eff\]:hover { --tw-gradient-to: #b8941f !important; }
+
+/* botão primário: dourado com texto escuro e borda visível (padrão do Felipe) */
+.bg-btnPrimary {
+  color: var(--ap-ink) !important;
+  border: 1.5px solid var(--ap-gold-line);
+  background-image: linear-gradient(180deg, #e8c964, #d4af37);
+  font-weight: 700;
+}
+.bg-btnPrimary:hover { filter: brightness(0.97); }
+
+/* ---- logos (os SVGs do app são desenhados no código; trocamos por imagem) -- */
+/* símbolo do menu lateral */
+svg[viewBox="0 0 524 431"] > * { display: none; }
+svg[viewBox="0 0 524 431"] {
+  background: url("/autopublic/autopublic-mark.svg") no-repeat center / contain;
+}
+/* logo com nome (telas de login) */
+svg[viewBox="0 0 1011 208"] > * { display: none; }
+svg[viewBox="0 0 1011 208"] {
+  background: url("/autopublic/autopublic-lockup-light.png") no-repeat left center / contain;
+}
+.dark svg[viewBox="0 0 1011 208"] {
+  background-image: url("/autopublic/autopublic-lockup-dark.png");
+}
+
+/* ---- telas de entrada (login / esqueci a senha) ----------------------- */
+.autopublic-auth {
+  background: var(--ap-paper);
+  color: var(--ap-ink);
+}
+.autopublic-auth .text-white { color: var(--ap-ink); }
+.autopublic-card {
+  background: #fff;
+  border: 1px solid var(--ap-line);
+  color: var(--ap-ink);
+  box-shadow: 0 1px 2px rgba(16, 17, 20, 0.04), 0 12px 32px rgba(16, 17, 20, 0.05);
+}
+.autopublic-auth a { color: var(--ap-gold-deep); }
+.autopublic-auth.light svg[viewBox="0 0 1011 208"] {
+  background-image: url("/autopublic/autopublic-lockup-light.png");
+}
+/* botão de ação principal (Entrar etc.): dourado, texto escuro e borda visível */
+button.bg-forth, .bg-forth.cursor-pointer {
+  color: var(--ap-ink) !important;
+  border: 1.5px solid var(--ap-gold-line);
+  background-image: linear-gradient(180deg, #e8c964, #d4af37);
+  font-weight: 700;
+}
+/* login: botão do Google e link "Cadastrar-se" ficam visíveis (decisão do Felipe, 14/10/2026) */
+.autopublic-auth form h1 { margin-bottom: 20px; }
+/* botão do Google: borda visível (padrão de botões da marca) */
+.autopublic-auth form div.cursor-pointer.bg-white.h-\[52px\] {
+  border: 1.5px solid var(--ap-line);
+  font-weight: 600;
+}
+
+/* painel da direita: marca no lugar dos depoimentos */
+.autopublic-painel {
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  padding: 48px;
+  border-radius: 12px;
+  text-align: center;
+  background:
+    radial-gradient(60% 50% at 80% 8%, rgba(212, 175, 55, 0.28), transparent 70%),
+    radial-gradient(50% 45% at 10% 95%, rgba(212, 175, 55, 0.16), transparent 70%),
+    linear-gradient(160deg, #fbf5e1 0%, #f6efd6 100%);
+  border: 1px solid var(--ap-line);
+}
+.autopublic-painel-marca {
+  width: 132px;
+  height: 132px;
+  background: url("/autopublic/autopublic-mark.svg") no-repeat center / contain;
+  filter: drop-shadow(0 14px 22px rgba(138, 109, 26, 0.28));
+}
+.autopublic-painel h2 {
+  margin: 0;
+  max-width: 520px;
+  font-size: 40px;
+  line-height: 1.12;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  color: var(--ap-ink);
+}
+.autopublic-painel p {
+  margin: 0;
+  max-width: 440px;
+  font-size: 18px;
+  line-height: 1.5;
+  color: #4a4636;
+}
+.autopublic-fonte {
+  margin-top: 12px;
+  font-size: 12px;
+  color: #6b6450 !important;
+  text-decoration: underline;
+}

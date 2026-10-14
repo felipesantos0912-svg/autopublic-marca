@@ -1,0 +1,11 @@
+# A imagem só precisa de patch/, assets/ e autopublic-theme.css.
+# As cópias "original*", prévias e ferramentas ficam de fora (são pesadas e só servem para teste local).
+original/
+original-next/
+original-backend/
+original-orchestrator/
+trabalho/
+preview/
+ferramentas/
+*.md
+.git

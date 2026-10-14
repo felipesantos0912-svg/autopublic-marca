@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="215 215 600 610">
+<defs>
+<linearGradient id="a" gradientUnits="userSpaceOnUse" x1="0" y1="230" x2="0" y2="810"><stop offset="0" stop-color="#fcf0be"/><stop offset="1" stop-color="#deb846"/></linearGradient>
+<linearGradient id="b" gradientUnits="userSpaceOnUse" x1="0" y1="230" x2="0" y2="810"><stop offset="0" stop-color="#d6b03c"/><stop offset="1" stop-color="#967012"/></linearGradient>
+</defs>
+<polygon points="800,230 230,470 430,570" fill="url(#a)"/>
+<polygon points="800,230 430,570 520,810" fill="url(#b)"/>
+</svg>
