@@ -126,12 +126,64 @@ const CHAVES_TEXTO = {
   watch_tutorial_title: 'Tudo pronto!',
   watch_tutorial_description: 'Agora é só criar a sua primeira publicação no Calendário.',
 };
-const RE_VAZIAS = new RegExp('"(' + CHAVES_VAZIAS.join('|') + ')":"(?:[^"\\\\]|\\\\.)*"', 'g');
-const RE_TEXTO = new RegExp('"(' + Object.keys(CHAVES_TEXTO).join('|') + ')":"(?:[^"\\\\]|\\\\.)*"', 'g');
+const RE_CHAVE_VAZIA = new RegExp('^(' + CHAVES_VAZIAS.join('|') + ')$');
+const RE_ALGUMA_CHAVE = new RegExp('"(' + CHAVES_VAZIAS.concat(Object.keys(CHAVES_TEXTO)).join('|') + ')"');
+
+/**
+ * As traduções ficam dentro do código compilado como JSON.parse('{...}'): um JSON dentro de um texto JS.
+ * Ali, uma aspa escapada do JSON aparece como \\" e uma regex simples erra o fim do valor (aprendido na prática:
+ * quebrou o JSON de todos os idiomas). Por isso: lê o texto JS, faz JSON.parse de verdade, altera as chaves
+ * e grava de volta escapando de novo.
+ */
+function traducoes(t) {
+  const abre = "JSON.parse('";
+  let saida = '';
+  let i = 0;
+  for (;;) {
+    const k = t.indexOf(abre, i);
+    if (k < 0) {
+      saida += t.slice(i);
+      break;
+    }
+    const ini = k + abre.length;
+    let j = ini;
+    while (j < t.length) {
+      const c = t[j];
+      if (c === '\\') j += 2;
+      else if (c === "'") break;
+      else j++;
+    }
+    const literal = t.slice(ini, j);
+    saida += t.slice(i, ini);
+    let novo = literal;
+    if (RE_ALGUMA_CHAVE.test(literal)) {
+      try {
+        const obj = JSON.parse(new Function("return '" + literal + "'")());
+        let mudou = false;
+        for (const chave of Object.keys(obj)) {
+          if (RE_CHAVE_VAZIA.test(chave) && obj[chave] !== '') {
+            obj[chave] = '';
+            mudou = true;
+            bump('texto-marketing-esvaziado');
+          } else if (Object.hasOwn(CHAVES_TEXTO, chave) && obj[chave] !== CHAVES_TEXTO[chave]) {
+            obj[chave] = CHAVES_TEXTO[chave];
+            mudou = true;
+            bump('texto-onboarding');
+          }
+        }
+        if (mudou) novo = JSON.stringify(obj).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+      } catch (e) {
+        bump('traducao-nao-processada');
+      }
+    }
+    saida += novo;
+    i = j;
+  }
+  return saida;
+}
 
 function marketing(t) {
-  t = rep(t, RE_VAZIAS, (_, k) => `"${k}":""`, 'texto-marketing-esvaziado');
-  t = rep(t, RE_TEXTO, (_, k) => `"${k}":${JSON.stringify(CHAVES_TEXTO[k])}`, 'texto-onboarding');
+  t = traducoes(t);
   // vídeo de tutorial do Postiz no onboarding
   t = rep(t, /https:\/\/www\.youtube\.com\/embed\/BdsCVvEYgHU[^"]*/g, 'about:blank', 'video-postiz');
   t = rep(t, /title:"Postiz Tutorial"/g, 'title:"Tutorial"', 'video-titulo');

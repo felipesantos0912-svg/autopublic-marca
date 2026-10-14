@@ -21,6 +21,9 @@ node "$MARCA/patch/aplicar-marca.mjs" --next "$T/next" --dist "$T/dist" --dist "
 echo "== sintaxe dos arquivos alterados"
 node "$MARCA/ferramentas/verificar-sintaxe.mjs" "$MARCA" "$T"
 
+echo "== traduções executadas de verdade (JSON dentro do JS precisa continuar válido)"
+node "$MARCA/ferramentas/verificar-traducoes.mjs" "$MARCA" "$T"
+
 echo "== resíduos (esperado: 0 em tudo, exceto onde indicado)"
 cd "$T"
 for s in 'Robô MultiPost' 'Entrepreneurs use' 'Vincent L' 'postiz.com/terms' 'postiz.com/privacy' 'BdsCVvEYgHU' 'Your Gitroom' '"$1"' 'TestimonialComponent,{})]})'; do
