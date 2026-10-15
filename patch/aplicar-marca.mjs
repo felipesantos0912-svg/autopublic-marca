@@ -293,7 +293,31 @@ function correcoesBackend(t) {
     'perfil-ao-atualizar-canal',
   );
   t = rep(t, /percentageChange: 5\b/g, 'percentageChange: undefined', 'percentual-falso-removido');
-  return limiteMeta(t);
+  return dmBotoesExtras(limiteMeta(t));
+}
+
+/**
+ * DM com mais de um botão:
+ *  O app só deixa configurar UM botão de link por DM (campos "texto do botão" + "URL"), mas o modelo de botões da Meta aceita até 3.
+ *  Agora, linhas do tipo  [[botao: Título do botão | https://link]]  no FIM do texto da DM viram botões extras (o 1º botão
+ *  continua sendo o configurado na tela; os extras vêm depois; máximo 3; título cortado em 20 caracteres) e são removidas do texto.
+ *  Vale para os dois pontos que montam a DM com botão: resposta privada ao comentário (sendPrivateReply) e DM dentro da janela
+ *  de 24 h, como a final do "pedir para seguir" (postDm). Sem a marcação, o comportamento é o de antes.
+ */
+const MARCADOR_BOTAO = String.raw`/\s*\[\[\s*botao\s*:\s*([^|\]]+?)\s*\|\s*(https?:\/\/[^\s\]]+)\s*\]\]/gi`;
+function dmBotoesExtras(t) {
+  return rep(
+    t,
+    /const messagePayload = ((?:params\.)?button)\s*\?\s*\{\s*attachment: \{\s*type: 'template',\s*payload: \{\s*template_type: 'button',\s*text: ((?:params\.)?message)\.slice\(0, 640\),\s*buttons: \[(\w+)\(((?:params\.)?button)\)\],\s*\},\s*\},\s*\}\s*: \{ text: ((?:params\.)?message) \};/g,
+    (_, btn, msg, fn) =>
+      `const autopublicBotoes = [];\n` +
+      `        const autopublicTexto = typeof ${msg} === 'string' ? ${msg}.replace(${MARCADOR_BOTAO}, (_m, titulo, link) => { autopublicBotoes.push({ type: 'web_url', url: link, title: titulo.trim().slice(0, 20) }); return ''; }) : ${msg};\n` +
+      `        const autopublicTodos = [...(${btn} ? [${fn}(${btn})] : []), ...autopublicBotoes].slice(0, 3);\n` +
+      `        const messagePayload = autopublicTodos.length\n` +
+      `            ? { attachment: { type: 'template', payload: { template_type: 'button', text: autopublicTexto.slice(0, 640), buttons: autopublicTodos } } }\n` +
+      `            : { text: autopublicTexto };`,
+    'dm-botoes-extras',
+  );
 }
 
 /**

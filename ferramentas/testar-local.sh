@@ -42,3 +42,4 @@ printf 'nginx: Cache-Control no-cache      (1): %s\n' "$(grep -c 'add_header Cac
 printf 'limite Meta: cache de pages()      (4): %s\n' "$(grep -rlF 'autopublicPaginasSemCache' dist dist-orq --include=*.js 2>/dev/null | wc -l)"
 printf 'limite Meta: página direta (Facebook) (2): %s\n' "$(grep -rlF 'const direta = await' dist dist-orq --include=*.js 2>/dev/null | wc -l)"
 printf 'limite Meta: mensagem clara        (2): %s\n' "$(grep -rlF 'limitou temporariamente as chamadas' dist dist-orq --include=*.js 2>/dev/null | wc -l)"
+printf 'DM com botões extras (marcador)     (4): %s\n' "$(grep -rlF 'autopublicBotoes' dist dist-orq --include=*.js 2>/dev/null | wc -l)"
