@@ -303,16 +303,23 @@ function correcoesBackend(t) {
  *  continua sendo o configurado na tela; os extras vêm depois; máximo 3; título cortado em 20 caracteres) e são removidas do texto.
  *  Vale para os dois pontos que montam a DM com botão: resposta privada ao comentário (sendPrivateReply) e DM dentro da janela
  *  de 24 h, como a final do "pedir para seguir" (postDm). Sem a marcação, o comportamento é o de antes.
+ *
+ *  Botões de RESPOSTA (caixinha "Sim, este" / "Não, outro"): uma linha  [[resposta: Sim, este | Não, outro]]  no fim do texto troca
+ *  o botão de link configurado por botões do tipo postback (até 3, título até 20 caracteres, payload "raiox_resp_<n>"). Quem toca
+ *  manda a escolha de volta como evento "postback" (o app só trata payloads "pb_...", os nossos são ignorados por ele e seguem
+ *  para o fluxo do Raio-X pela cópia do nginx). Se houver os dois marcadores, vale o de resposta.
  */
 const MARCADOR_BOTAO = String.raw`/\s*\[\[\s*botao\s*:\s*([^|\]]+?)\s*\|\s*(https?:\/\/[^\s\]]+)\s*\]\]/gi`;
+const MARCADOR_RESPOSTA = String.raw`/\s*\[\[\s*resposta\s*:\s*([^\]]+?)\s*\]\]/gi`;
 function dmBotoesExtras(t) {
   return rep(
     t,
     /const messagePayload = ((?:params\.)?button)\s*\?\s*\{\s*attachment: \{\s*type: 'template',\s*payload: \{\s*template_type: 'button',\s*text: ((?:params\.)?message)\.slice\(0, 640\),\s*buttons: \[(\w+)\(((?:params\.)?button)\)\],\s*\},\s*\},\s*\}\s*: \{ text: ((?:params\.)?message) \};/g,
     (_, btn, msg, fn) =>
       `const autopublicBotoes = [];\n` +
-      `        const autopublicTexto = typeof ${msg} === 'string' ? ${msg}.replace(${MARCADOR_BOTAO}, (_m, titulo, link) => { autopublicBotoes.push({ type: 'web_url', url: link, title: titulo.trim().slice(0, 20) }); return ''; }) : ${msg};\n` +
-      `        const autopublicTodos = [...(${btn} ? [${fn}(${btn})] : []), ...autopublicBotoes].slice(0, 3);\n` +
+      `        const autopublicRespostas = [];\n` +
+      `        const autopublicTexto = typeof ${msg} === 'string' ? ${msg}.replace(${MARCADOR_BOTAO}, (_m, titulo, link) => { autopublicBotoes.push({ type: 'web_url', url: link, title: titulo.trim().slice(0, 20) }); return ''; }).replace(${MARCADOR_RESPOSTA}, (_m, lista) => { lista.split('|').map((x) => x.trim()).filter(Boolean).slice(0, 3).forEach((titulo, i) => autopublicRespostas.push({ type: 'postback', title: titulo.slice(0, 20), payload: 'raiox_resp_' + (i + 1) })); return ''; }) : ${msg};\n` +
+      `        const autopublicTodos = autopublicRespostas.length ? autopublicRespostas : [...(${btn} ? [${fn}(${btn})] : []), ...autopublicBotoes].slice(0, 3);\n` +
       `        const messagePayload = autopublicTodos.length\n` +
       `            ? { attachment: { type: 'template', payload: { template_type: 'button', text: autopublicTexto.slice(0, 640), buttons: autopublicTodos } } }\n` +
       `            : { text: autopublicTexto };`,
