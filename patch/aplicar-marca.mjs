@@ -293,6 +293,88 @@ function correcoesBackend(t) {
     'perfil-ao-atualizar-canal',
   );
   t = rep(t, /percentageChange: 5\b/g, 'percentageChange: undefined', 'percentual-falso-removido');
+  return limiteMeta(t);
+}
+
+/**
+ * Limite de chamadas da Meta ("(#4) Application request limit reached"):
+ *  O limite do app é 200 chamadas/hora x nº de usuários do app (poucos usuários = poucas chamadas). Cada tentativa de
+ *  conectar Facebook/Instagram varria TODOS os Business Managers da conta (me/businesses + owned_pages + client_pages de
+ *  cada um), tanto ao listar as páginas (pages) quanto ao salvar a escolhida (fetchPageInformation do Facebook). Com vários BMs,
+ *  poucas tentativas esgotavam o limite e o app inteiro passava a falhar ("Authentication failed").
+ *  a) pages() (Facebook e Instagram): guarda o resultado por 5 min por token (não repete a varredura ao reabrir/tentar de novo;
+ *     resultado vazio ou interrompido pelo limite NÃO fica guardado) e para de varrer assim que a Meta responde que o limite estourou.
+ *  b) fetchPageInformation() do Facebook: tenta primeiro buscar direto a página escolhida (1 chamada); só se não vier o token
+ *     da página cai na varredura antiga. Se a Meta avisar do limite, para e mostra uma mensagem clara em vez de "Page not found".
+ */
+const CODIGOS_LIMITE_META = '[4, 17, 32, 613]';
+function limiteMeta(t) {
+  // a) pages(): cabeçalho -> cache + método interno; budgetExceeded passa a considerar o limite
+  t = rep(
+    t,
+    /async pages\(accessToken\) \{(\s+)(const seen\w*Ids = new Set\(\);\s+const all\w+ = \[\];\s+const overallDeadline = Date\.now\(\) \+ 90000;\s+)const budgetExceeded = \(\) => Date\.now\(\) > overallDeadline;/g,
+    (_, e, corpo) =>
+      `async pages(accessToken) {${e}const autopublicCache = (globalThis.__autopublicPaginasMeta ||= new Map());` +
+      `${e}const autopublicIni = Date.now();` +
+      `${e}for (const [k, v] of autopublicCache) if (v.ate < autopublicIni) autopublicCache.delete(k);` +
+      `${e}const autopublicChave = \`\${this.identifier || this.constructor.name}:\${accessToken}\`;` +
+      `${e}let autopublicEntrada = autopublicCache.get(autopublicChave);` +
+      `${e}if (!autopublicEntrada) {` +
+      `${e}    autopublicEntrada = { ate: autopublicIni + 300000, p: this.autopublicPaginasSemCache(accessToken) };` +
+      `${e}    autopublicCache.set(autopublicChave, autopublicEntrada);` +
+      `${e}    autopublicEntrada.p.then((r) => { if (!r || r.length === 0 || (globalThis.__autopublicLimiteMeta || 0) >= autopublicIni) autopublicCache.delete(autopublicChave); }, () => autopublicCache.delete(autopublicChave));` +
+      `${e}}` +
+      `${e}return autopublicEntrada.p;` +
+      `\n    }` +
+      `\n    async autopublicPaginasSemCache(accessToken) {${e}${corpo}let limitado = false;${e}const budgetExceeded = () => limitado || Date.now() > overallDeadline;`,
+    'meta-pages-cache',
+  );
+  // a) pages(): ao receber erro de limite da Meta, para a varredura
+  t = rep(
+    t,
+    /(const response = await \(await fetchWithTimeout\(nextUrl\)\)\.json\(\);)(\s+)(if \(response\.data\) \{\s+for \(const page of response\.data\) \{\s+if \(!seen\w*Ids\.has\(page\.id\)\))/g,
+    (_, busca, e, resto) =>
+      `${busca}${e}if (response.error && ${CODIGOS_LIMITE_META}.includes(response.error.code)) {` +
+      `${e}    limitado = true;` +
+      `${e}    globalThis.__autopublicLimiteMeta = Date.now();` +
+      `${e}    console.warn('[Meta] limite de chamadas atingido — varredura de paginas interrompida');` +
+      `${e}    return;` +
+      `${e}}${e}${resto}`,
+    'meta-pages-limite',
+  );
+  // b) Facebook fetchPageInformation(): busca direta + parada no limite
+  t = rep(
+    t,
+    /(async fetchPageInformation\(accessToken, data\) \{\s+const pageId = data\.page;)(\s+)(const fields = 'id,username,name,access_token,picture\.type\(large\)';)(?!\s+let limiteMeta)/g,
+    (_, ini, e, fields) =>
+      `${ini}${e}${fields}` +
+      `${e}let limiteMeta = false;` +
+      `${e}const ehLimite = (r) => !!(r && r.error && ${CODIGOS_LIMITE_META}.includes(r.error.code));` +
+      `${e}try {` +
+      `${e}    const direta = await (await fetchWithTimeout(\`\${meta_graph_constants_1.META_FACEBOOK_GRAPH_URL}/\${pageId}?fields=\${fields}&access_token=\${accessToken}\`)).json();` +
+      `${e}    if (direta && direta.access_token && String(direta.id) === String(pageId)) {` +
+      `${e}        return { id: direta.id, name: direta.name, access_token: direta.access_token, picture: direta.picture?.data?.url || '', username: direta.username };` +
+      `${e}    }` +
+      `${e}    if (ehLimite(direta)) limiteMeta = true;` +
+      `${e}}` +
+      `${e}catch {` +
+      `${e}}`,
+    'meta-pagina-direta',
+  );
+  t = rep(
+    t,
+    /(const searchPaginated = async \(startUrl\) => \{)(\s+)(let url = startUrl;\s+while \(url\) \{\s+)(const response = await \(await fetchWithTimeout\(url\)\)\.json\(\);)/g,
+    (_, cab, e, laco, busca) =>
+      `${cab}${e}if (limiteMeta) return null;${e}${laco}${busca}` +
+      `${e}    if (ehLimite(response)) {${e}        limiteMeta = true;${e}        return null;${e}    }`,
+    'meta-busca-limite',
+  );
+  t = rep(
+    t,
+    /throw new Error\('Page not found in your accounts'\);/g,
+    `throw new Error(limiteMeta ? 'O Facebook limitou temporariamente as chamadas do aplicativo. Aguarde alguns minutos e tente de novo.' : 'Page not found in your accounts');`,
+    'meta-mensagem-limite',
+  );
   return t;
 }
 

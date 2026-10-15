@@ -39,3 +39,6 @@ printf 'perfil gravado ao atualizar     (2): %s\n' "$(grep -rlF 'profileId && !r
 printf 'aviso de erro ao salvar canal   (>=1): %s\n' "$(grep -rlF 'position:fixed;top:16px;right:16px;z-index:99999' next --include=*.js 2>/dev/null | wc -l)"
 printf 'nginx: regra de revalidação do JS (1): %s\n' "$(grep -c 'location ~ \^/_next/static/chunks' "$T/nginx.conf")"
 printf 'nginx: Cache-Control no-cache      (1): %s\n' "$(grep -c 'add_header Cache-Control "no-cache" always' "$T/nginx.conf")"
+printf 'limite Meta: cache de pages()      (4): %s\n' "$(grep -rlF 'autopublicPaginasSemCache' dist dist-orq --include=*.js 2>/dev/null | wc -l)"
+printf 'limite Meta: página direta (Facebook) (2): %s\n' "$(grep -rlF 'const direta = await' dist dist-orq --include=*.js 2>/dev/null | wc -l)"
+printf 'limite Meta: mensagem clara        (2): %s\n' "$(grep -rlF 'limitou temporariamente as chamadas' dist dist-orq --include=*.js 2>/dev/null | wc -l)"
