@@ -203,7 +203,9 @@ function marketing(t) {
   t = rep(t, /https:\/\/postiz\.com\/terms/g, LEGAL_TERMOS, 'link-termos');
   t = rep(t, /https:\/\/postiz\.com\/privacy/g, LEGAL_PRIVACIDADE, 'link-privacidade');
   t = rep(t, /https:\/\/www\.linkedin\.com\/company\/gitroom/g, 'https://www.linkedin.com/company/sua-empresa', 'placeholder-linkedin');
-  t = rep(t, /https:\/\/affiliate\.postiz\.com/g, '/', 'link-afiliado');
+  // o item de menu "Afiliado" (oculto: exige cobrança ligada) não pode apontar para "/": o app descobre o título
+  // da página procurando o primeiro item de menu cujo caminho casa com a URL, e "/" casaria com tudo (ex.: título "Afiliado" em Configurações)
+  t = rep(t, /https:\/\/affiliate\.postiz\.com/g, '/__sem-afiliado', 'link-afiliado');
   // depoimentos de usuários do Postiz (lista fixa no código): esvazia a lista
   let guard = 0;
   for (;;) {

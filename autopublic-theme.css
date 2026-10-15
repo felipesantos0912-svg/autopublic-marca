@@ -31,6 +31,9 @@
   --new-bgColor: var(--ap-paper);
 }
 :root .dark {
+  /* itens ativos (menu, Dia/Semana/Mês): dourado translúcido em vez do bloco branco */
+  --new-boxFocused: rgba(212, 175, 55, 0.18);
+  --new-textItemFocused: #e8c964;
   --new-ai-btn: #d4af37;
   --new-table-text-focused: #e8c964;
   --color-seventh: #8a6d1a;
