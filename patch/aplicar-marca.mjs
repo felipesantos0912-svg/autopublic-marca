@@ -498,6 +498,57 @@ if (NGINX_CONF) {
   }
 }
 
+/**
+ * nginx: cópia dos eventos do Instagram para o fluxo do Raio-X (n8n).
+ * O webhook do Instagram (POST /api/public/ig-webhook) segue indo para o app exatamente como antes; o `mirror` do nginx manda
+ * uma CÓPIA para http://n8n:5678/webhook/raiox-instagram (o n8n está na mesma rede "easypanel"). A resposta da cópia é ignorada:
+ * se o n8n estiver fora do ar, nada muda para o app (o endereço é resolvido na hora, por variável, então o nginx também
+ * não deixa de subir). O segredo do cabeçalho X-Raiox-Key NÃO fica na imagem: vem de /etc/nginx/raiox/*.conf, montado pelo servidor.
+ */
+if (NGINX_CONF) {
+  const MARCADOR2 = '# autopublic: copia dos eventos do Instagram para o fluxo do Raio-X (n8n)';
+  const conf2 = fs.readFileSync(NGINX_CONF, 'utf8');
+  if (conf2.includes(MARCADOR2)) {
+    console.log('nginx: já tem a cópia dos eventos do Instagram; nada a fazer.');
+  } else {
+    const bloco2 =
+      `        ${MARCADOR2}\n` +
+      '        location = /api/public/ig-webhook {\n' +
+      '            mirror /_raiox_mirror;\n' +
+      '            mirror_request_body on;\n' +
+      '            proxy_pass http://localhost:3000/public/ig-webhook;\n' +
+      '            proxy_http_version 1.1;\n' +
+      '            proxy_read_timeout 180s;\n' +
+      '            proxy_connect_timeout 10s;\n' +
+      '            proxy_send_timeout 60s;\n' +
+      '            proxy_set_header Host $host;\n' +
+      '            proxy_set_header X-Real-IP $remote_addr;\n' +
+      '            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n' +
+      '            proxy_set_header X-Forwarded-Proto $scheme;\n' +
+      '        }\n\n' +
+      '        location = /_raiox_mirror {\n' +
+      '            internal;\n' +
+      '            resolver 127.0.0.11 valid=30s ipv6=off;\n' +
+      '            set $raiox_alvo http://n8n:5678;\n' +
+      '            include /etc/nginx/raiox/*.conf;\n' +
+      '            proxy_pass $raiox_alvo/webhook/raiox-instagram;\n' +
+      '            proxy_http_version 1.1;\n' +
+      '            proxy_set_header Host n8n;\n' +
+      '            proxy_set_header Content-Type $content_type;\n' +
+      '            proxy_pass_request_body on;\n' +
+      '            proxy_connect_timeout 3s;\n' +
+      '            proxy_read_timeout 8s;\n' +
+      '        }\n\n';
+    const novo2 = conf2.replace(/(\n)(\s*)location \/ \{/, (_, nl, ind) => `${nl}${bloco2}${ind}location / {`);
+    if (novo2 === conf2) {
+      console.log('ATENÇÃO: não achei "location / {" no nginx.conf; cópia dos eventos NÃO aplicada.');
+    } else {
+      if (!DRY) fs.writeFileSync(NGINX_CONF, novo2);
+      bump('nginx-ig-mirror');
+    }
+  }
+}
+
 // ------------------------------------------------------------------ 5) CSS da marca
 const cssTema = fs.readFileSync(path.join(MARCA, 'autopublic-theme.css'), 'utf8');
 const chunksDir = path.join(NEXT, 'static', 'chunks');

@@ -14,6 +14,9 @@ ARG FONTE_URL=""
 # Quem recebe avisos internos do sistema (no original, o recurso "agência" avisava o autor do Postiz).
 ARG ADMIN_EMAIL="felipe@agenciadeliveryfood.com.br"
 
+# Pasta onde o servidor monta o segredo do reenvio dos eventos do Instagram (ver patch do nginx); vazia na imagem.
+RUN mkdir -p /etc/nginx/raiox
+
 COPY patch /tmp/autopublic-marca/patch
 COPY assets /tmp/autopublic-marca/assets
 COPY autopublic-theme.css /tmp/autopublic-marca/autopublic-theme.css

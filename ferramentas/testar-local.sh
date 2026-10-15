@@ -43,3 +43,5 @@ printf 'limite Meta: cache de pages()      (4): %s\n' "$(grep -rlF 'autopublicPa
 printf 'limite Meta: página direta (Facebook) (2): %s\n' "$(grep -rlF 'const direta = await' dist dist-orq --include=*.js 2>/dev/null | wc -l)"
 printf 'limite Meta: mensagem clara        (2): %s\n' "$(grep -rlF 'limitou temporariamente as chamadas' dist dist-orq --include=*.js 2>/dev/null | wc -l)"
 printf 'DM com botões extras (marcador)     (4): %s\n' "$(grep -rlF 'autopublicBotoes' dist dist-orq --include=*.js 2>/dev/null | wc -l)"
+printf 'nginx: cópia dos eventos do Instagram (1): %s\n' "$(grep -c 'location = /_raiox_mirror' "$T/nginx.conf")"
+printf 'nginx: mirror no webhook do Instagram (1): %s\n' "$(grep -c 'mirror /_raiox_mirror' "$T/nginx.conf")"
