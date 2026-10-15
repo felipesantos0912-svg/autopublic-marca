@@ -23,9 +23,11 @@ RUN node /tmp/autopublic-marca/patch/aplicar-marca.mjs \
       --dist /app/apps/backend/dist \
       --dist /app/apps/orchestrator/dist \
       --public /app/apps/frontend/public \
+      --nginx /etc/nginx/nginx.conf \
       --marca /tmp/autopublic-marca \
       ${FONTE_URL:+--fonte-url "$FONTE_URL"} \
       ${ADMIN_EMAIL:+--admin-email "$ADMIN_EMAIL"} \
+ && nginx -t \
  && rm -rf /tmp/autopublic-marca
 
 LABEL org.opencontainers.image.title="Autopublic" \

@@ -11,12 +11,13 @@ cp -r "$MARCA/original-next" "$T/next"
 cp -r "$MARCA/original-backend/dist" "$T/dist"
 cp -r "$MARCA/original-orchestrator/dist" "$T/dist-orq"
 cp -r "$MARCA/original/apps/frontend/public" "$T/public"
+cp "$MARCA/original/etc/nginx/nginx.conf" "$T/nginx.conf"
 
 echo "== aplicando o patch"
-node "$MARCA/patch/aplicar-marca.mjs" --next "$T/next" --dist "$T/dist" --dist "$T/dist-orq" --public "$T/public" --marca "$MARCA" --admin-email felipe@agenciadeliveryfood.com.br ${FONTE:+--fonte-url "$FONTE"}
+node "$MARCA/patch/aplicar-marca.mjs" --next "$T/next" --dist "$T/dist" --dist "$T/dist-orq" --public "$T/public" --marca "$MARCA" --admin-email felipe@agenciadeliveryfood.com.br --nginx "$T/nginx.conf" ${FONTE:+--fonte-url "$FONTE"}
 
 echo "== segunda rodada (idempotência)"
-node "$MARCA/patch/aplicar-marca.mjs" --next "$T/next" --dist "$T/dist" --dist "$T/dist-orq" --public "$T/public" --marca "$MARCA" --admin-email felipe@agenciadeliveryfood.com.br ${FONTE:+--fonte-url "$FONTE"} | sed -n 1,4p
+node "$MARCA/patch/aplicar-marca.mjs" --next "$T/next" --dist "$T/dist" --dist "$T/dist-orq" --public "$T/public" --marca "$MARCA" --admin-email felipe@agenciadeliveryfood.com.br --nginx "$T/nginx.conf" ${FONTE:+--fonte-url "$FONTE"} | sed -n 1,4p
 
 echo "== sintaxe dos arquivos alterados"
 node "$MARCA/ferramentas/verificar-sintaxe.mjs" "$MARCA" "$T"
@@ -36,3 +37,5 @@ printf 'soma de métricas com Number()   (>=1): %s\n' "$(grep -rlF 'Number(' nex
 printf 'percentageChange fixo em 5      (0): %s\n' "$(grep -rlE 'percentageChange: 5\b' dist dist-orq --include=*.js 2>/dev/null | wc -l)"
 printf 'perfil gravado ao atualizar     (2): %s\n' "$(grep -rlF 'profileId && !refresh' dist dist-orq --include=*.js 2>/dev/null | wc -l)"
 printf 'aviso de erro ao salvar canal   (>=1): %s\n' "$(grep -rlF 'position:fixed;top:16px;right:16px;z-index:99999' next --include=*.js 2>/dev/null | wc -l)"
+printf 'nginx: regra de revalidação do JS (1): %s\n' "$(grep -c 'location ~ \^/_next/static/chunks' "$T/nginx.conf")"
+printf 'nginx: Cache-Control no-cache      (1): %s\n' "$(grep -c 'add_header Cache-Control "no-cache" always' "$T/nginx.conf")"

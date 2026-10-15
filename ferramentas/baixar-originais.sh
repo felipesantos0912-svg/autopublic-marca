@@ -43,6 +43,10 @@ tar_da_imagem /app apps/frontend/public apps/frontend/src/app/colors.css apps/fr
   libraries/react-shared-libraries/src/translation/locales/pt/translation.json \
   libraries/react-shared-libraries/src/translation/locales/en/translation.json | tar -xf - -C "$DESTINO/original"
 
+echo "== original/etc/nginx (nginx.conf)"
+mkdir -p "$DESTINO/original/etc/nginx"
+remoto "docker run --rm --entrypoint cat $IMAGEM /etc/nginx/nginx.conf" > "$DESTINO/original/etc/nginx/nginx.conf"
+
 echo "== conferência (devem ser do app ORIGINAL, ou seja, ainda com a marca antiga)"
 printf 'arquivos com "Robô MultiPost" em original-next: %s\n' "$(grep -rlF 'Robô MultiPost' "$DESTINO/original-next" --include=*.js 2>/dev/null | wc -l)"
 du -sh "$DESTINO"/original* | sed 's#.*/##' | paste -sd' ' -

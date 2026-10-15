@@ -31,6 +31,7 @@ const PUBLIC = arg('public');
 const MARCA = arg('marca');
 const FONTE_URL = arg('fonte-url') || '';
 const ADMIN_EMAIL = arg('admin-email') || ''; // quem recebe avisos internos do sistema (no original iam para o autor do Postiz)
+const NGINX_CONF = arg('nginx'); // caminho do nginx.conf (opcional)
 const DRY = process.argv.includes('--dry');
 
 if (!NEXT || !MARCA) {
@@ -354,6 +355,42 @@ function processaArquivos(arquivos, fns, rotulo) {
 const arquivosNext = [...walk(path.join(NEXT, 'static')), ...walk(path.join(NEXT, 'server'))];
 processaArquivos(arquivosNext, [loginPainel, marketing, marcaNome, cores, privacidade, correcoesFront], 'frontend (.next)');
 for (const d of DISTS) processaArquivos([...walk(d)], [marketing, marcaNome, cores, correcoesBackend], `backend (${d})`);
+
+// ------------------------------------------------------------------ 4b) nginx: JS do navegador sempre revalidado
+/**
+ * O app original manda os arquivos JS com "Cache-Control: public, max-age=31536000, immutable" e o nome do arquivo não
+ * muda quando o conteúdo muda (só o CSS da marca muda de nome). Resultado: depois de cada atualização, quem já tinha usado
+ * o app via o JavaScript ANTIGO até dar Ctrl+Shift+R. Aqui os .js de /_next/static/chunks/ passam a ser "no-cache":
+ * o navegador pergunta ao servidor a cada uso (ETag; resposta 304, sem baixar de novo se não mudou).
+ * Fontes, imagens e CSS continuam em cache longo.
+ */
+if (NGINX_CONF) {
+  const MARCADOR = '# autopublic: js do navegador sempre revalidado';
+  const conf = fs.readFileSync(NGINX_CONF, 'utf8');
+  if (conf.includes(MARCADOR)) {
+    console.log('nginx: já tem a regra de revalidação; nada a fazer.');
+  } else {
+    const bloco =
+      `        ${MARCADOR}\n` +
+      '        location ~ ^/_next/static/chunks/.+\\.js$ {\n' +
+      '            proxy_pass http://localhost:4200;\n' +
+      '            proxy_http_version 1.1;\n' +
+      '            proxy_set_header Host $host;\n' +
+      '            proxy_set_header X-Real-IP $remote_addr;\n' +
+      '            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n' +
+      '            proxy_set_header X-Forwarded-Proto $scheme;\n' +
+      '            proxy_hide_header Cache-Control;\n' +
+      '            add_header Cache-Control "no-cache" always;\n' +
+      '        }\n\n';
+    const novo = conf.replace(/(\n)(\s*)location \/ \{/, (_, nl, ind) => `${nl}${bloco}${ind}location / {`);
+    if (novo === conf) {
+      console.log('ATENÇÃO: não achei "location / {" no nginx.conf; nada alterado.');
+    } else {
+      if (!DRY) fs.writeFileSync(NGINX_CONF, novo);
+      bump('nginx-js-revalidado');
+    }
+  }
+}
 
 // ------------------------------------------------------------------ 5) CSS da marca
 const cssTema = fs.readFileSync(path.join(MARCA, 'autopublic-theme.css'), 'utf8');
