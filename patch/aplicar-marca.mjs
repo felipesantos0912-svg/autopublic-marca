@@ -237,6 +237,64 @@ function privacidade(t) {
   return t;
 }
 
+// ------------------------------------------------------------------ 2c) correções de comportamento do app original
+const ID = '[\\w$]+';
+
+/**
+ * Navegador (frontend):
+ *  b) Métricas: o servidor devolve cada total diário como TEXTO ("160689") e a tela somava com "+", o que COLA os textos
+ *     (0 + "160689" + "0"... = 160689000000). Converte para número antes de somar.
+ *  c) Salvar canal ("Configurar Seu Canal"): se o servidor recusava (409 canal já conectado em outro perfil, 500 etc.),
+ *     a janela só fechava, sem nenhuma mensagem. Agora mostra o erro e mantém a janela aberta.
+ */
+function correcoesFront(t) {
+  t = rep(
+    t,
+    new RegExp(`\\.data\\.reduce\\(\\((${ID}),(${ID})\\)=>\\1\\+\\2\\.total,0\\)\\|\\|0\\)`, 'g'),
+    (_, a, b) => `.data.reduce((${a},${b})=>${a}+Number(${b}.total),0)||0)`,
+    'metricas-soma-numerica',
+  );
+  const re = new RegExp(
+    'async (' + ID + ')=>\\{await (' + ID + ')\\(`/integrations/provider/\\$\\{(' + ID + ')\\}/connect`,' +
+      '\\{method:"POST",body:JSON\\.stringify\\(\\1\\)\\}\\),(' + ID + ')\\(\\)\\}',
+    'g',
+  );
+  t = rep(
+    t,
+    re,
+    (_, d, f, id, fecha) =>
+      `async ${d}=>{let __r=await ${f}(\`/integrations/provider/\${${id}}/connect\`,{method:"POST",body:JSON.stringify(${d})});` +
+      'if(__r&&__r.status>=400){' +
+      'let __m=__r.status>=500?"O servidor não conseguiu salvar este canal. Se for uma página do Facebook, reconecte e marque essa página na janela de permissões da Meta.":"Não foi possível salvar o canal.";' +
+      'try{let __j=await __r.clone().json();if(__j&&__j.message&&__r.status<500)__m=__j.message}catch(__e){}' +
+      'try{let __d=document.createElement("div");__d.textContent=__m;' +
+      '__d.style.cssText="position:fixed;top:16px;right:16px;z-index:99999;max-width:440px;padding:12px 16px;border-radius:12px;border:1.5px solid #b8941f;background:#101114;color:#fff;font:600 13px system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.35)";' +
+      'document.body.appendChild(__d);setTimeout(()=>__d.remove(),12000)}catch(__e){}return}' +
+      `${fecha}()}`,
+    'salvar-canal-mostra-erro',
+  );
+  return t;
+}
+
+/**
+ * Servidor (backend e orquestrador):
+ *  a) Perfil errado ao conectar canal: ao "criar ou atualizar" um canal que JÁ existe (mesma conta reconectada, ou o registro
+ *     temporário reaproveitado entre tentativas), o bloco de atualização NÃO incluía o perfil; só o de criação incluía.
+ *     O canal ficava preso no perfil antigo mesmo com o usuário em outro. Agora o perfil escolhido é gravado (exceto em
+ *     "reconectar" um canal existente, que mantém o perfil dele).
+ *  d) Métricas: percentageChange fixo em 5 (os "5,0%" de todos os cartões eram falsos). Passa a não ser enviado.
+ */
+function correcoesBackend(t) {
+  t = rep(
+    t,
+    /(\n(\s+)deletedAt: null,\n\s+refreshNeeded: false,\n\s+refreshError: null,\n\s+refreshErrorAt: null,)(\n\s+\},\n\s+\}\);\n\s+if \(oneTimeToken\) \{)/g,
+    (_, bloco, ind, cauda) => `${bloco}\n${ind}...(profileId && !refresh ? { profileId } : {}),${cauda}`,
+    'perfil-ao-atualizar-canal',
+  );
+  t = rep(t, /percentageChange: 5\b/g, 'percentageChange: undefined', 'percentual-falso-removido');
+  return t;
+}
+
 // ------------------------------------------------------------------ 3) painel do login
 function loginPainel(t) {
   const reCont = /"bg-\[#0E0E0E\] flex flex-1 p-\[12px\] gap-\[12px\] min-h-screen w-screen text-white"/g;
@@ -294,8 +352,8 @@ function processaArquivos(arquivos, fns, rotulo) {
 }
 
 const arquivosNext = [...walk(path.join(NEXT, 'static')), ...walk(path.join(NEXT, 'server'))];
-processaArquivos(arquivosNext, [loginPainel, marketing, marcaNome, cores, privacidade], 'frontend (.next)');
-for (const d of DISTS) processaArquivos([...walk(d)], [marketing, marcaNome, cores], `backend (${d})`);
+processaArquivos(arquivosNext, [loginPainel, marketing, marcaNome, cores, privacidade, correcoesFront], 'frontend (.next)');
+for (const d of DISTS) processaArquivos([...walk(d)], [marketing, marcaNome, cores, correcoesBackend], `backend (${d})`);
 
 // ------------------------------------------------------------------ 5) CSS da marca
 const cssTema = fs.readFileSync(path.join(MARCA, 'autopublic-theme.css'), 'utf8');

@@ -29,3 +29,10 @@ cd "$T"
 for s in 'js.stripe.com' 'check-for-updates' "sendEmail('nevo@postiz.com'" 'RoboMultipost' 'Robô MultiPost' 'Entrepreneurs use' 'Vincent L' 'postiz.com/terms' 'postiz.com/privacy' 'BdsCVvEYgHU' 'Your Gitroom' '"$1"' 'TestimonialComponent,{})]})'; do
   printf '%-34s arquivos=%s\n' "$s" "$(grep -rlF -- "$s" next dist dist-orq --include=*.js --include=*.json --include=*.html --include=*.rsc 2>/dev/null | wc -l)"
 done
+
+echo "== correções de comportamento do app (contagens esperadas entre parênteses)"
+printf 'soma de métricas sem Number()   (0): %s\n' "$(grep -rlE '\.data\.reduce\(\([A-Za-z_$]+,[A-Za-z_$]+\)=>[A-Za-z_$]+\+[A-Za-z_$]+\.total,0\)' next --include=*.js 2>/dev/null | wc -l)"
+printf 'soma de métricas com Number()   (>=1): %s\n' "$(grep -rlF 'Number(' next --include=*.js 2>/dev/null | xargs grep -lE '\.data\.reduce\(\([A-Za-z_$]+,[A-Za-z_$]+\)=>[A-Za-z_$]+\+Number\([A-Za-z_$]+\.total\)' 2>/dev/null | wc -l)"
+printf 'percentageChange fixo em 5      (0): %s\n' "$(grep -rlE 'percentageChange: 5\b' dist dist-orq --include=*.js 2>/dev/null | wc -l)"
+printf 'perfil gravado ao atualizar     (2): %s\n' "$(grep -rlF 'profileId && !refresh' dist dist-orq --include=*.js 2>/dev/null | wc -l)"
+printf 'aviso de erro ao salvar canal   (>=1): %s\n' "$(grep -rlF 'position:fixed;top:16px;right:16px;z-index:99999' next --include=*.js 2>/dev/null | wc -l)"
